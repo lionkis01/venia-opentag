@@ -19,6 +19,10 @@ import { ProductOptionsShimmer } from '@magento/venia-ui/lib/components/ProductO
 import CustomAttributes from '@magento/venia-ui/lib/components/ProductFullDetail/CustomAttributes';
 import defaultClasses from '@magento/venia-ui/lib/components/ProductFullDetail/productFullDetail.module.css';
 
+import creditOperations from '../Credit/credit.gql';
+import { useQuery } from '@apollo/client';
+import { useUserContext } from '@magento/peregrine/lib/context/user';
+
 const WishlistButton = React.lazy(() => import('@magento/venia-ui/lib/components/Wishlist/AddToListButton'));
 const Options = React.lazy(() => import('@magento/venia-ui/lib/components/ProductOptions'));
 
@@ -38,7 +42,6 @@ const ERROR_FIELD_TO_MESSAGE_MAPPING = {
 
 const ProductFullDetail = props => {
     const { product } = props;
-
     const talonProps = useProductFullDetail({ product });
 
     const {
@@ -57,7 +60,35 @@ const ProductFullDetail = props => {
         wishlistButtonProps
     } = talonProps;
 
-    const { formatMessage } = useIntl();
+    const {queries} = creditOperations;
+    const {getCreditQuery} = queries;
+
+    const [{ isSignedIn: isUserSignedIn, currentUser : currentUser }] = useUserContext();
+
+    const {data} = useQuery(getCreditQuery, {
+        variables: {email: currentUser['email']},
+        fetchPolicy: "cache-first",
+        nextFetchPolicy: "cache-and-network",
+        pollInterval: 500
+    });
+
+    const { credit } = data['getCreditByEmail'];
+
+    const creditElement = isUserSignedIn ? (
+        <div className="credit">
+            <div className="credit-text">
+                <span> Pay </span>
+                <Price
+                    currencyCode={productDetails.price.currency}
+                    value={productDetails.price.value / credit}
+                />
+                <span> at the end of the month for {credit} months </span>
+            </div>
+        </div>
+    ) : <h1> You should sign in to see credit information </h1>;
+
+
+    const {formatMessage} = useIntl();
 
     const classes = useStyle(defaultClasses, props.classes);
 
@@ -241,6 +272,7 @@ const ProductFullDetail = props => {
                 data-cy="ProductFullDetail-root"
                 onSubmit={handleAddToCart}
             >
+                {creditElement}
                 <section className={classes.imageCarousel}>
                     <Carousel images={mediaGalleryEntries} />
                 </section>
@@ -281,7 +313,7 @@ const ProductFullDetail = props => {
                         />
                     </span>
                     <QuantityStepper
-                        classes={{ root: classes.quantityRoot }}
+                        classes={{root: classes.quantityRoot}}
                         min={1}
                         message={errors.get('quantity')}
                     />
@@ -302,7 +334,7 @@ const ProductFullDetail = props => {
                             defaultMessage={'Description'}
                         />
                     </span>
-                    <RichContent html={productDetails.description} />
+                    <RichContent html={productDetails.description}/>
                 </section>
                 <section className={classes.details}>
                     <span
