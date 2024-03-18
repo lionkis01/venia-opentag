@@ -9,6 +9,9 @@ const componentLogo = module.exports = {
 const componentOverRiddingLogo = module.exports = {
     ['@magento/peregrine/lib/util/makeUrl.js']:'src/components/talons/makeUrl.js'
 };
+const componentOverrideCreateAccount = module.exports = {
+    ['@magento/venia-ui/lib/components/CreateAccount']:'src/components/CreateAccount'
+};
 
 module.exports = targets => {
 
@@ -22,6 +25,10 @@ module.exports = targets => {
 
     targets.of('@magento/pwa-buildpack').webpackCompiler.tap(compiler => {
         new moduleOverridePlugin(componentOverRiddingLogo).apply(compiler);
+    });
+
+    targets.of('@magento/pwa-buildpack').webpackCompiler.tap(compiler => {
+        new moduleOverridePlugin(componentOverrideCreateAccount).apply(compiler);
     });
 
     targets.of("@magento/venia-ui").routes.tap(routes => {
