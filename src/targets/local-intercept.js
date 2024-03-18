@@ -12,6 +12,9 @@ const componentOverRiddingLogo = module.exports = {
 const componentOverrideCreateAccount = module.exports = {
     ['@magento/venia-ui/lib/components/CreateAccount']:'src/components/CreateAccount'
 };
+const componentOverrideAccountInformationPage = module.exports = {
+    ['@magento/venia-ui/lib/components/AccountInformationPage']:'src/components/AccountInformationPage'
+};
 
 module.exports = targets => {
 
@@ -29,6 +32,10 @@ module.exports = targets => {
 
     targets.of('@magento/pwa-buildpack').webpackCompiler.tap(compiler => {
         new moduleOverridePlugin(componentOverrideCreateAccount).apply(compiler);
+    });
+
+    targets.of('@magento/pwa-buildpack').webpackCompiler.tap(compiler => {
+        new moduleOverridePlugin(componentOverrideAccountInformationPage).apply(compiler);
     });
 
     targets.of("@magento/venia-ui").routes.tap(routes => {
