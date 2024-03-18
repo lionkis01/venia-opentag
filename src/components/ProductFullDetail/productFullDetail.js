@@ -19,7 +19,7 @@ import { ProductOptionsShimmer } from '@magento/venia-ui/lib/components/ProductO
 import CustomAttributes from '@magento/venia-ui/lib/components/ProductFullDetail/CustomAttributes';
 import defaultClasses from '@magento/venia-ui/lib/components/ProductFullDetail/productFullDetail.module.css';
 
-import creditOperations from '../Credit/credit.gql';
+import {GET_CUSTOMER_CREDIT} from '../Credit/credit.gql';
 import { useQuery } from '@apollo/client';
 import { useUserContext } from '@magento/peregrine/lib/context/user';
 
@@ -60,19 +60,14 @@ const ProductFullDetail = props => {
         wishlistButtonProps
     } = talonProps;
 
-    const {queries} = creditOperations;
-    const {getCreditQuery} = queries;
-
     const [{ isSignedIn: isUserSignedIn, currentUser : currentUser }] = useUserContext();
 
-    const {data} = useQuery(getCreditQuery, {
-        variables: {email: currentUser['email']},
+    const {data} = useQuery(GET_CUSTOMER_CREDIT, {
         fetchPolicy: "cache-first",
         nextFetchPolicy: "cache-and-network",
-        pollInterval: 500
+        pollInterval: 1000,
+        skip: !isUserSignedIn
     });
-
-    const { credit } = data['getCreditByEmail'];
 
     const creditElement = isUserSignedIn ? (
         <div className="credit">
@@ -80,13 +75,12 @@ const ProductFullDetail = props => {
                 <span> Pay </span>
                 <Price
                     currencyCode={productDetails.price.currency}
-                    value={productDetails.price.value / credit}
+                    value={productDetails.price.value / data.customerCredit}
                 />
-                <span> at the end of the month for {credit} months </span>
+                <span> at the end of the month for {data.customerCredit} months </span>
             </div>
         </div>
     ) : <h1> You should sign in to see credit information </h1>;
-
 
     const {formatMessage} = useIntl();
 
